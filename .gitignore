@@ -1,0 +1,4 @@
+*.txt
+*.vscode
+*__init__.py
+__pycache__
