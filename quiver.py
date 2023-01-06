@@ -42,6 +42,7 @@ class _Path:
         target: int,
         quiver: Quiver,
         order: PathOrder = DegLex(),
+        isEmpty: bool = False,
     ) -> None:
 
         if vars:
@@ -58,6 +59,7 @@ class _Path:
         self.quiver = quiver
         self.monomial = vars
         self.order = order
+        self.nonePath = isEmpty
 
     def __len__(self) -> int:
         return len(self.monomial)
@@ -81,9 +83,9 @@ class _Path:
                 last = number
                 exponent = 1
 
-        return result + printing.toVar(last)
+        return result + printing.toVar(last) + printing.toSup(exponent)
 
-    def __add__(self, other: _Path) -> _Path | None:
+    def __add__(self, other: _Path) -> _Path:
         """Computes the concatenation of two paths or
         returns None if the paths are not composable."""
 
@@ -98,7 +100,7 @@ class _Path:
                 self.quiver,
             )
         else:
-            return None
+            return _nonePath(self.quiver, self.order)
 
     def __invert__(self) -> _Path:
         """Returns the opposite of a path, which in particular
@@ -134,13 +136,48 @@ class _Path:
     def __lt__(self, other: _Path) -> bool:
         return self.order._isLessThan(self, other)
 
-    def _isDivisibleBy(self, other: _Path) -> bool:
-        """Check if the path is divisible by another path, that is,
-        if the other path appears as a substring."""
-        if len(other) >= len(self):
-            return self == other
+    def _find(self, other: _Path) -> int:
+        """Check if the path is divisible by another path. If it is,
+        return the first index where it appears as a subpath. If
+        there is no such index, return -1."""
+        # NOTE: Expected to be used with paths of small length (say
+        # at most 100) so the naive linear search is more that enough.
 
-        return "".join(map(str, other.monomial)) in "".join(map(str, self.monomial))
+        if len(self) < len(other):
+            return -1
+        else:
+            for i in range(len(self) - len(other) + 1):
+                divisor = self.monomial[i : i + len(other)]
+                if divisor == other.monomial:
+                    return i
+        return -1
+
+    def _replaceBy(
+        self,
+        new_path: _Path,
+        position_found: int,
+        old_path_length: int,
+    ) -> _Path:
+        """Replace the subpath of self starting at position i
+        and ending at position j with the other path."""
+        assert position_found > -1
+
+        new_monomial = (
+            self.monomial[:position_found]
+            + new_path.monomial
+            + self.monomial[position_found + old_path_length :]
+        )
+        return _Path(
+            self.quiver.source[new_monomial[0]],
+            new_monomial,
+            self.quiver.target[new_monomial[-1]],
+            self.quiver,
+            self.order,
+        )
+
+
+def _nonePath(quiver: Quiver, order: PathOrder) -> _Path:
+    return _Path(0, [], 0, quiver, order, isEmpty=True)
 
 
 class Quiver:
@@ -265,7 +302,13 @@ class Quiver:
 
     def pathsFromTo(self, v: int, w: int, length: int) -> list[_Path]:
         """Return the set of all paths from v to w up to the given length."""
-        assert length > 0, ValueError("Length must be positive.")
+        assert length > -1, ValueError("Length must be non-negative.")
+
+        if length == 0:
+            if v != w:
+                return []
+            else:
+                return [_Path(v, [], v, self)]
 
         if length == 1:
             # TODO: Can optimize by picking v or w depending on size of out(v) or in(w).

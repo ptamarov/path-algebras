@@ -25,13 +25,16 @@ class TestIncomingArrows(unittest.TestCase):
         path3 = factory.createPath(1, [0, 2, 1, 2, 1, 0, 2, 1], 1, self.quiver)
         self.assertEqual(path1 + path2, path3)
 
+    # TODO: Check NonePath and non-composable arrows.
+
+    def test_find(self):
+        find_in = quiver._Path(1, [2, 1, 0, 0], 1, self.quiver)
+        find = quiver._Path(1, [0, 0], 1, self.quiver)
+        self.assertEqual(find_in._find(find), 2)
+
 
 class TestA5(unittest.TestCase):
     def test_number_of_arrows_A5(self):
         Q = specialquivers.createDynkinA(10)
         for k in range(1, 10):
             self.assertEqual(len(Q.arrowIdeal(k, top=True)), 10 - k)
-
-
-if __name__ == "__main__":
-    unittest.main()

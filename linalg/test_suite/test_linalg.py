@@ -1,7 +1,7 @@
 import unittest
 import linalg.linearalg as linearalg
 from linalg.Q import Rational as Q
-from linalg.Q import Rationals as QQ
+from linalg.Q import QQ
 
 
 class TestLinAlg(unittest.TestCase):

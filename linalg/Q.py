@@ -103,7 +103,7 @@ class Rational(FieldScalar):
         return result
 
 
-class Rationals(Field):
+class QQ(Field):
     def __init__(self, char=0):
         self.char = char
         self.scalars = Rational
