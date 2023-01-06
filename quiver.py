@@ -1,6 +1,5 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from functions import *
 from functools import total_ordering
 from itertools import product
 import printing
@@ -52,7 +51,7 @@ class _Path:
             assert target == quiver.target[vars[-1]], ValueError(
                 f"Vertex {target} is not the target {quiver.target[vars[-1]]} of arrow {vars[-1]}."
             )
-            _checkIfArrowsInQuiver(vars, quiver)
+            _assertArrowsInQuiver(vars, quiver)
 
         self.source = source
         self.target = target
@@ -153,17 +152,18 @@ class Quiver:
         t: dict[int, int],
         name: str = "QQ",
     ) -> None:
-        assert domain(s) == set(q1), ValueError(
+        assert q0, ValueError("Cannot initialize quiver with no vertices.")
+        assert set(s.keys()) == set(q1), ValueError(
             "Source function must have domain equal to arrows."
         )
-        assert domain(t) == set(q1), ValueError(
+        assert set(t.keys()) == set(q1), ValueError(
             "Target function must have domain equal to arrows."
         )
-        assert codomain(s).issubset(set(q0)), ValueError(
-            "Source function must have image contained in nodes."
+        assert set(s.values()).issubset(set(q0)), ValueError(
+            "Source function must have image contained in vertices."
         )
-        assert codomain(t).issubset(set(q0)), ValueError(
-            "Target function must have image contained in nodes."
+        assert set(t.values()).issubset(set(q0)), ValueError(
+            "Target function must have image contained in vertices."
         )
 
         self.nodes = q0
@@ -187,7 +187,7 @@ class Quiver:
         )
 
     def __eq__(self, other: Quiver) -> bool:
-        """Check if two quivers are equal, by checking that the
+        """Check if two quivers are equal, by verifying that the
         arrow and node sets are equal, and that the source and
         target functions are equal.
 
@@ -213,7 +213,7 @@ class Quiver:
                 self.target[arrow],
                 self,
             )
-            for arrow in preimage(self.target, v)
+            for arrow in [u for u in set(self.target.keys()) if self.target[u] == v]
         ]
 
     def _outgoingArrows(self, v: int) -> list[_Path]:
@@ -299,8 +299,8 @@ class Quiver:
             return result
 
 
-def _checkIfArrowsInQuiver(monomial: list[int], quiver: Quiver) -> None:
-    """Helper function to check that a path initialized to live in a
+def _assertArrowsInQuiver(monomial: list[int], quiver: Quiver) -> None:
+    """Helper function to verify that a path initialized to live in a
     given quiver has its arrows in that quiver and these arrows are
     composable."""
     for i in range(len(monomial)):

@@ -4,7 +4,7 @@ from quiver import Quiver
 def createDynkinA(n: int) -> Quiver:
     """Create the Dynikin quiver of type A with n vertices
     and all vertices combed in one direction."""
-
+    assert n > 0, ValueError("Dynkin quiver of type A must have at least one vertex.")
     q0 = [i for i in range(n)]
     q1 = [i for i in range(n - 1)]
     s = {i: i for i in range(n - 1)}
