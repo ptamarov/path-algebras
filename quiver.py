@@ -10,27 +10,39 @@ class PathOrder(ABC):
     def _isLessThan(self, path1: _Path, path2: _Path) -> bool:
         pass
 
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
 
-class DegLex(PathOrder):
+
+class GradedLex(PathOrder):
+    """Graded lexicographical order. Compares path length first (shorter paths
+    are smaller) and if equal compares entries lexicographically using the usual
+    order on natural numbers."""
+
     def _isLessThan(self, path1: _Path, path2: _Path) -> bool:
         if len(path1) == len(path2):
             return path1.monomial < path2.monomial
         else:
             return len(path1) < len(path2)
 
+    def __str__(self) -> str:
+        return "DegLex"
 
-class PathFactory:
-    def __init__(self, order: PathOrder) -> None:
-        self.order = order
 
-    def createPath(
-        self,
-        source: int,
-        monomial: list[int],
-        target: int,
-        quiver: Quiver,
-    ):
-        return _Path(source, monomial, target, quiver, self.order)
+class GradedRevLex(PathOrder):
+    """Degree lexicographical order. Compares path length first (shorter paths
+    are smaller) and if equal compares entries lexicographically using the usual
+    order on natural numbers."""
+
+    def _isLessThan(self, path1: _Path, path2: _Path) -> bool:
+        if len(path1) == len(path2):
+            return path1.monomial[::-1] < path2.monomial[::-1]
+        else:
+            return len(path1) < len(path2)
+
+    def __str__(self) -> str:
+        return "DegRevLex"
 
 
 @total_ordering
@@ -41,7 +53,6 @@ class _Path:
         vars: list[int],
         target: int,
         quiver: Quiver,
-        order: PathOrder = DegLex(),
         isEmpty: bool = False,
     ) -> None:
 
@@ -58,11 +69,33 @@ class _Path:
         self.target = target
         self.quiver = quiver
         self.monomial = vars
-        self.order = order
         self.nonePath = isEmpty
 
     def __len__(self) -> int:
         return len(self.monomial)
+
+    def __getitem__(self, subscript) -> _Path:
+        if isinstance(subscript, slice):
+            s = subscript.start
+            t = subscript.stop
+
+            if not s and not t:  # Make a copy.
+                return _Path(self.source, self.monomial[:], self.target, self.quiver)
+
+            if s == t:  # Empty slice creates NonePath.
+                return self.quiver.createNonePath()
+
+            else:
+                new_mon = self.monomial.__getitem__(subscript)
+                new_source = self.quiver.source[new_mon[0]]
+                new_target = self.quiver.target[new_mon[-1]]
+                return _Path(new_source, new_mon, new_target, self.quiver)
+        else:
+            # Return item as path of length one.
+            new_arrow = self.monomial.__getitem__(subscript)
+            new_source = self.quiver.source[new_arrow]
+            new_target = self.quiver.target[new_arrow]
+            return _Path(new_source, [new_arrow], new_target, self.quiver)
 
     def __str__(self) -> str:
         result = ""
@@ -71,8 +104,10 @@ class _Path:
             return "e" + printing.toSub(self.source)
 
         last = self.monomial[0]
+        itermon = iter(self.monomial)
+        next(itermon)
         exponent = 1
-        for number in self.monomial[1:]:
+        for number in itermon:
             if last == number:
                 exponent += 1
                 last = number
@@ -93,14 +128,13 @@ class _Path:
             "Cannot concatenate paths from different quivers."
         )
         if self.target == other.source:
-            return _Path(
+            return self.quiver.createPath(
                 self.source,
                 self.monomial + other.monomial,
                 other.target,
-                self.quiver,
             )
         else:
-            return _nonePath(self.quiver, self.order)
+            return self.quiver.createNonePath()
 
     def __invert__(self) -> _Path:
         """Returns the opposite of a path, which in particular
@@ -118,7 +152,6 @@ class _Path:
                 self.target == other.target,
                 self.monomial == other.monomial,
                 self.quiver == other.quiver,
-                # self.order == other.order,
             ]
         )
 
@@ -129,12 +162,11 @@ class _Path:
                 self.monomial,
                 self.target,
                 self.quiver,
-                self.order,
             )
         )
 
     def __lt__(self, other: _Path) -> bool:
-        return self.order._isLessThan(self, other)
+        return self.quiver.order._isLessThan(self, other)
 
     def _find(self, other: _Path) -> int:
         """Check if the path is divisible by another path. If it is,
@@ -167,17 +199,27 @@ class _Path:
             + new_path.monomial
             + self.monomial[position_found + old_path_length :]
         )
-        return _Path(
+        return self.quiver.createPath(
             self.quiver.source[new_monomial[0]],
             new_monomial,
             self.quiver.target[new_monomial[-1]],
-            self.quiver,
-            self.order,
         )
 
-
-def _nonePath(quiver: Quiver, order: PathOrder) -> _Path:
-    return _Path(0, [], 0, quiver, order, isEmpty=True)
+    def _isLeftDivisibleBy(self, path: _Path) -> int:
+        """Returns the unique integer i such that self[:i] == path
+        or -1 if no such integer exists."""
+        # NOTE: This returns -1 when path is the source of path.
+        index = -1
+        if len(path) > len(self):
+            return index
+        else:
+            for i in range(len(path)):
+                if self.monomial[i] == path.monomial[i]:
+                    index += 1
+                    continue
+                else:
+                    break
+            return index
 
 
 class Quiver:
@@ -187,6 +229,7 @@ class Quiver:
         q1: list[int],
         s: dict[int, int],
         t: dict[int, int],
+        order: PathOrder = GradedLex(),
         name: str = "QQ",
     ) -> None:
         assert q0, ValueError("Cannot initialize quiver with no vertices.")
@@ -207,6 +250,7 @@ class Quiver:
         self.arrows = q1
         self.source = s
         self.target = t
+        self.order = order
         self.name = name
 
     def __str__(self) -> str:
@@ -220,6 +264,7 @@ class Quiver:
             self.arrows,
             self.target,  # Target and source interchanged.
             self.source,
+            self.order,
             name=f"{self.name}-OP",
         )
 
@@ -235,6 +280,7 @@ class Quiver:
                 self.nodes == other.nodes,
                 self.target == other.target,
                 self.source == other.source,
+                self.order == other.order,
             ]
         )
 
@@ -340,6 +386,17 @@ class Quiver:
             return [path for path in result if len(path) == length]
         else:
             return result
+
+    def createPath(
+        self,
+        source: int,
+        monomial: list[int],
+        target: int,
+    ):
+        return _Path(source, monomial, target, self)
+
+    def createNonePath(self):
+        return _Path(0, [], 0, self, isEmpty=True)
 
 
 def _assertArrowsInQuiver(monomial: list[int], quiver: Quiver) -> None:

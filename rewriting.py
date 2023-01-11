@@ -15,10 +15,20 @@ class RewritingRule:
         polynomial: poly.Polynomial,
     ) -> None:
 
+        # Check that rewriting rule is consisten with chosen order. Guarantees termination.
+        for path in polynomial.support:
+            assert leading_term > path, ValueError(
+                f"""Cannot create rewriting rule!
+                Issue: {leading_term} < {path} in the {leading_term.quiver.order} order.
+                """
+            )
+
         self.leading_term = leading_term
         self.polynomial = polynomial
-        self.order = leading_term.order
-        # TODO: Check that rewriting rule is consistent with order.
+        self.order = leading_term.quiver.order
+
+    def __str__(self) -> str:
+        return str(self.leading_term) + " ---> " + str(self.polynomial)
 
     def reduceOnce(self, polynomial: poly.Polynomial) -> poly.Polynomial:
         """Reduce all arrows that are divisible by the leading term of
@@ -47,6 +57,8 @@ class RewritingRule:
         return copy
 
     def reduceFully(self, polynomial: poly.Polynomial) -> poly.Polynomial:
+        """Rewrites a polynomial until no path in its support is divisible by
+        the leading term of the rewriting rule."""
         new_poly = self.reduceOnce(polynomial)
         old_poly = polynomial
 
