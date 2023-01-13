@@ -1,6 +1,5 @@
 import unittest
 import quiver
-import specialquivers
 import polynomial
 from linalg.Q import Rational
 
@@ -15,9 +14,9 @@ class TestPolynomials(unittest.TestCase):
     def setUp(self):
         self.quiver = quiver.Quiver(
             q0=[0, 1],
-            q1=[0, 1, 2],
-            s={0: 1, 1: 0, 2: 1},
-            t={0: 1, 1: 1, 2: 0},
+            q1=[3, 1, 2],
+            s={3: 1, 1: 0, 2: 1},
+            t={3: 1, 1: 1, 2: 0},
         )
 
     def test_zero_addition(self):
@@ -38,7 +37,7 @@ class TestPolynomials(unittest.TestCase):
         poly1 = polynomial.Polynomial(
             [(path1, Rational(1, 7)), (path2, Rational(-1, 23))]
         )
-        self.assertEqual(poly1.support, [path2, path1])
+        self.assertEqual(poly1.support, [path1, path2])
 
     def test_unit(self):
         idempotents = self.quiver.arrowIdeal(0, top=True)
@@ -57,3 +56,32 @@ class TestPolynomials(unittest.TestCase):
 
         for e in idempotents:
             self.assertEqual(e, e * e)
+
+    def test_leading_coefficient(self):
+        p1 = self.quiver.createPath(0, [1, 2, 1, 2], 0)
+        p2 = self.quiver.createPath(0, [1, 2], 0)
+        poly1 = polynomial.Polynomial([(p1, Rational(1, 7)), (p2, Rational(-1, 23))])
+        self.assertEqual(poly1.LC(), Rational(1, 7))
+
+        q1 = self.quiver.createPath(0, [1, 2, 1, 2], 0)
+        q2 = self.quiver.createPath(0, [1, 3, 3, 2], 0)
+        poly2 = polynomial.Polynomial([(q1, Rational(1, 7)), (q2, Rational(-1, 23))])
+        self.assertEqual(poly2.LC(), Rational(-1, 23))
+
+    def test_filter_max_LT(self):
+        p1 = self.quiver.createPath(0, [1, 2, 1, 2], 0)
+        p2 = self.quiver.createPath(0, [1, 2], 0)
+        poly1 = polynomial.Polynomial([(p1, Rational(1)), (p2, Rational(1))])
+
+        q1 = self.quiver.createPath(0, [1, 2, 1, 2], 0)
+        q2 = self.quiver.createPath(0, [1, 3, 3, 2], 0)
+        poly2 = polynomial.Polynomial([(q1, Rational(1, 7)), (q2, Rational(1))])
+
+        r1 = self.quiver.createPath(0, [1, 2], 0)
+        r2 = self.quiver.createPath(0, [1, 3, 3, 2], 0)
+        poly3 = polynomial.Polynomial([(r1, Rational(1)), (r2, Rational(-1))])
+
+        ps = [poly1, poly2, poly3]
+        max, oth = polynomial.filterPolynomialsMaximumLT(ps)
+
+        self.assertEqual((max, oth), ([poly2, poly3], [poly1]))

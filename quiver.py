@@ -4,6 +4,9 @@ from functools import total_ordering
 from itertools import product
 import printing
 
+# IMPORTANT NOTE: heapq implements a min-heap, so all orders below are implemented
+# in their reversed version: __lt__ is actually __gt__.
+
 
 class PathOrder(ABC):
     @abstractmethod
@@ -22,9 +25,9 @@ class GradedLex(PathOrder):
 
     def _isLessThan(self, path1: _Path, path2: _Path) -> bool:
         if len(path1) == len(path2):
-            return path1.monomial < path2.monomial
+            return path1.monomial > path2.monomial
         else:
-            return len(path1) < len(path2)
+            return len(path1) > len(path2)
 
     def __str__(self) -> str:
         return "DegLex"
@@ -37,9 +40,9 @@ class GradedRevLex(PathOrder):
 
     def _isLessThan(self, path1: _Path, path2: _Path) -> bool:
         if len(path1) == len(path2):
-            return path1.monomial[::-1] < path2.monomial[::-1]
+            return path1.monomial[::-1] > path2.monomial[::-1]
         else:
-            return len(path1) < len(path2)
+            return len(path1) > len(path2)
 
     def __str__(self) -> str:
         return "DegRevLex"
@@ -206,7 +209,7 @@ class _Path:
         )
 
     def _isLeftDivisibleBy(self, path: _Path) -> int:
-        """Returns the unique integer i such that self[:i] == path
+        """Returns the unique integer i such that self[:i+1] == path
         or -1 if no such integer exists."""
         # NOTE: This returns -1 when path is the source of path.
         index = -1
@@ -220,6 +223,13 @@ class _Path:
                 else:
                     break
             return index
+
+    def _isRightDivisibleBy(self, path: _Path) -> int:
+        """Returns the unique integer i such that self[i:] == path
+        or -1 if no such integer exists."""
+        # NOTE: This returns -1 when path is the source vertex of path.
+        index = len(self) - (~self)._isLeftDivisibleBy(~path) - 1
+        return index if index != len(self) else -1
 
 
 class Quiver:
@@ -280,7 +290,6 @@ class Quiver:
                 self.nodes == other.nodes,
                 self.target == other.target,
                 self.source == other.source,
-                self.order == other.order,
             ]
         )
 

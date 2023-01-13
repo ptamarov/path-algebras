@@ -17,7 +17,7 @@ class RewritingRule:
 
         # Check that rewriting rule is consisten with chosen order. Guarantees termination.
         for path in polynomial.support:
-            assert leading_term > path, ValueError(
+            assert leading_term < path, ValueError(
                 f"""Cannot create rewriting rule!
                 Issue: {leading_term} < {path} in the {leading_term.quiver.order} order.
                 """
@@ -48,7 +48,7 @@ class RewritingRule:
                     )
                     new_polynomial_list += [new_term]
 
-                old_polynomial_list = copy.polynomial[::]
+                old_polynomial_list = copy.polynomial[:]
                 old_polynomial_list.pop(i)
                 # TODO: Maybe one can modify polynomial in place instead by allowing
                 # polynomials to consist of list of lists of paths, coeff.

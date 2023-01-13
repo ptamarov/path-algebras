@@ -26,7 +26,6 @@ class TestRewriting(unittest.TestCase):
         path = self.quiver.createPath(1, [2, 1], 1)
         lower_terms = polynomial.Polynomial([(path, Rational(1))])
         self.rule = rewriting.RewritingRule(leading_term, lower_terms)
-        print(self.rule)
 
     def test_replacing(self):
         aaa = self.quiver.createPath(1, [3, 3, 3], 1)
@@ -92,12 +91,26 @@ class TestRewriting(unittest.TestCase):
 
     def test_left_divisors(self):
         path = self.quiver.createPath(1, [2, 1, 2, 1, 2, 1], 1)
+
         left_divisor = self.quiver.createPath(1, [2, 1, 2, 1], 1)
-        not_left_divisor = self.quiver.createPath(0, [1, 2, 1, 2, 1], 1)
-        vertex = self.quiver.createPath(1, [], 1)
+
         self.assertEqual(path._isLeftDivisibleBy(left_divisor), 3)
+        self.assertEqual(path[:4], left_divisor)
+
+        not_left_divisor = self.quiver.createPath(0, [1, 2, 1, 2, 1], 1)
         self.assertEqual(path._isLeftDivisibleBy(not_left_divisor), -1)
 
-        # Case of vertices.
-        self.assertEqual(path._isLeftDivisibleBy(vertex), -1)
-        vertex = self.quiver.createPath(1, [], 1)
+    def test_right_divisors(self):
+        path = self.quiver.createPath(1, [2, 1, 2, 1, 2, 1], 1)
+
+        right_divisor = self.quiver.createPath(1, [2, 1, 2, 1], 1)
+        second_right_divisor = self.quiver.createPath(0, [1, 2, 1, 2, 1], 1)
+
+        self.assertEqual(path._isRightDivisibleBy(right_divisor), 2)
+        self.assertEqual(path._isRightDivisibleBy(second_right_divisor), 1)
+
+        self.assertEqual(path[2:], right_divisor)
+        self.assertEqual(path[1:], second_right_divisor)
+
+        not_right_divisor = self.quiver.createPath(0, [1, 2], 0)
+        self.assertEqual(path._isRightDivisibleBy(not_right_divisor), -1)
