@@ -82,6 +82,6 @@ class TestPolynomials(unittest.TestCase):
         poly3 = polynomial.Polynomial([(r1, Rational(1)), (r2, Rational(-1))])
 
         ps = [poly1, poly2, poly3]
-        max, oth = polynomial.filterPolynomialsMaximumLT(ps)
+        max, oth = polynomial._filterPolynomialsMaximumLT(ps)
 
         self.assertEqual((max, oth), ([poly2, poly3], [poly1]))

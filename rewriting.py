@@ -33,7 +33,7 @@ class RewritingRule:
         """Reduce all arrows that are divisible by the leading term of
         the rewriting rule once. Reduces the first occurrence of a divisor
         only."""
-        copy = polynomial.copy()
+        copy = polynomial._copy()
 
         for i in range(len(copy.polynomial)):
             term, scalar = copy.polynomial[i]

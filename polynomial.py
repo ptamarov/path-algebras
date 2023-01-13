@@ -37,7 +37,7 @@ class Polynomial:
 
         return result if result else "0"
 
-    def copy(self) -> Polynomial:
+    def _copy(self) -> Polynomial:
         return Polynomial(self.polynomial[::])
 
     def __add__(self, other: Polynomial) -> Polynomial:
@@ -63,7 +63,7 @@ class Polynomial:
     def __eq__(self, other: Polynomial) -> bool:
         return self.polynomial == other.polynomial
 
-    def makeMonic(self) -> Polynomial:
+    def _makeMonic(self) -> Polynomial:
         """Given a non-zero polynomial f, divide it by its
         leading coefficient."""
         return self * ~(self.LC())
@@ -94,8 +94,8 @@ class Polynomial:
         )
         return self.polynomial[:][0][1]
 
-    def linearReduceWithRespectTo(self, q: Polynomial) -> Polynomial:
-        """If LM(q) appearins in the polynomial p with coefficient c, return
+    def _linearReduceWithRespectTo(self, q: Polynomial) -> Polynomial:
+        """If LM(q) appears in the polynomial p with coefficient c, return
         p - c / LC(q) q."""
         lm, lc = q.LT()
         xs = [(m, c) for m, c in self.polynomial if m == lm]
@@ -107,9 +107,9 @@ class Polynomial:
         else:
             return self
 
-    def isLinearlyReducedWithRespectTo(self: Polynomial, ps: list[Polynomial]) -> bool:
+    def _isLinearlyReducedWithRespectTo(self: Polynomial, ps: list[Polynomial]) -> bool:
         """Check that a polynomial is linearly reduced with respect to a list of
-        polynomials. This means that the arrows in the support of self is not equal to
+        polynomials. This means that no paths in the support of self is equal to
         the leading term of any of the q in ps."""
         support = self.support
 
@@ -126,7 +126,7 @@ def _pathToMonomial(path: _Path, scalar: field.FieldScalar) -> Polynomial:
     return Polynomial([(path, scalar)])
 
 
-def filterPolynomialsMaximumLT(
+def _filterPolynomialsMaximumLT(
     ps: list[Polynomial],
 ) -> Tuple[list[Polynomial], list[Polynomial]]:
     """Returns a pair M, O where M is the list of polynomials

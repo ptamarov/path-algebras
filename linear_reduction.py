@@ -15,38 +15,33 @@ def isLinearlySelfReduced(listPolynomials: list[Polynomial]) -> bool:
 
     for p in listPolynomials:
         others_p = [q for q in listPolynomials if p != q]
-        if p.isLinearlyReducedWithRespectTo(others_p):
+        if p._isLinearlyReducedWithRespectTo(others_p):
             continue
         else:
             return False
     return True
 
 
-def linearReduce(p: Polynomial, listPolynomials: list[Polynomial]) -> Polynomial:
-    """Return a polynomial q such that p and q have the same coset
-    modulo listPolynomials and which is linearly reduced with respect to it
-    (no leading monomial in listPolynomials is equal to a monomial appearing
-    in q.)
-
-    Assumes that listPolynomials is linearly self-reduced."""
-    assert isLinearlySelfReduced(listPolynomials)  # This check is expensive.
-
-    for q in listPolynomials:
-        p = p.linearReduceWithRespectTo(q)
-    return p
-
-
 def linearSelfReduce(ps: list[Polynomial]) -> list[Polynomial]:
+    processed: list[Polynomial] = []
+
     if len(ps) == 1:
         return [p * ~(p.LC()) for p in ps]
 
-    else:
-        maxes, rests = polynomial.filterPolynomialsMaximumLT(ps)
+    while len(ps) > 0:
+        maxes, rests = polynomial._filterPolynomialsMaximumLT(ps)
         pivot = maxes.pop()  # Get the one with max LT that was listed last.
-        pivot = pivot * ~(pivot.LC())  # Make it monic.
-        rest = _cleanZeros([g.linearReduceWithRespectTo(pivot) for g in maxes])
-        qs = linearSelfReduce(rest + rests)
+        processed.append(pivot * ~(pivot.LC()))  # Make it monic.
+        rest = _cleanZeros([g._linearReduceWithRespectTo(pivot) for g in maxes])
+        ps = rest + rests
 
-    pivot = linearReduce(pivot, qs)  # Reduce pivot.
+    result = []
+    counter = len(processed) - 1
 
-    return [pivot] + qs  # Output list is ordered with respect to LM.
+    while counter >= 0:
+        pivot = processed.pop()
+        result.append(pivot)
+        for i in range(counter):
+            processed[i] = processed[i]._linearReduceWithRespectTo(pivot)
+        counter -= 1
+    return result[::-1]

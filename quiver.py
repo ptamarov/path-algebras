@@ -104,7 +104,7 @@ class _Path:
         result = ""
 
         if not self.monomial:
-            return "e" + printing.toSub(self.source)
+            return "e" + printing._toSub(self.source)
 
         last = self.monomial[0]
         itermon = iter(self.monomial)
@@ -116,12 +116,12 @@ class _Path:
                 last = number
                 continue
             else:
-                var = printing.toVar(last)
-                result += var + printing.toSup(exponent)
+                var = printing._toVar(last)
+                result += var + printing._toSup(exponent)
                 last = number
                 exponent = 1
 
-        return result + printing.toVar(last) + printing.toSup(exponent)
+        return result + printing._toVar(last) + printing._toSup(exponent)
 
     def __add__(self, other: _Path) -> _Path:
         """Computes the concatenation of two paths or
