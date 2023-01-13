@@ -1,4 +1,3 @@
-import heapq
 import polynomial as poly
 import quiver
 from linalg import field
