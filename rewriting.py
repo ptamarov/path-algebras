@@ -3,6 +3,10 @@ import quiver
 from linalg import field
 from typing import Tuple
 
+# Refactor? A rewriting rule is just a polynomial with a chosen leading
+# term. Since the order is chosen by the user, the leading term is deduced
+# automatically.
+
 
 class RewritingRule:
     """A rewriting rule is a pair (T, P) where T is a Path and P is a polynomial
@@ -14,7 +18,7 @@ class RewritingRule:
         polynomial: poly.Polynomial,
     ) -> None:
 
-        # Check that rewriting rule is consisten with chosen order. Guarantees termination.
+        # Check that rewriting rule is consistent with chosen order. Guarantees termination.
         for path in polynomial.support:
             assert leading_term < path, ValueError(
                 f"""Cannot create rewriting rule!
@@ -65,3 +69,45 @@ class RewritingRule:
             old_poly = new_poly
             new_poly = self.reduceOnce(old_poly)
         return new_poly
+
+
+class RewritingSystem:
+    """A rewriting system is initialized by a list of rewriting rules."""
+
+    def __init__(self, rules: list[RewritingRule]) -> None:
+        self.rules = rules
+
+
+def rulesOverlap(rule1: RewritingRule, rule2: RewritingRule) -> bool:
+    """Determine if the leading monomials m1 of rule1 and m2 of rule2 overlap,
+    meaning that there are nontrivial monomials a and b such that m1 * b = a * m2."""
+
+    m1 = rule1.leading_term  # x1 x2 x3 ... xm
+    m2 = rule2.leading_term  # y1 y2 y3 ... yn
+
+    # TODO: Complete.
+
+    return True
+
+
+def sPolynomial(rule1: RewritingRule, rule2: RewritingRule) -> poly.Polynomial | None:
+
+    return None
+
+    # TODO:
+    # Given a pair of rewriting rules, one can compute a maximalOverlap
+    # This maximalOverlap gives an sPolynomial.
+
+    # TODO:
+    # A rewriting system has to be linearly self reduced before initialization.
+
+    # TODO:
+    # A polynomial can be reduced fully with respect to a rewriting system.
+
+    # TODO:
+    # A rewriting system is confluent if all of its sPolynomials for all maximal
+    # overlaps rewrite to zero.
+
+    # TODO:
+    # A rewriting system can be completed to a confluent one (for fin. dim. algebras)
+    # by adding all non-zero normal forms of sPolynomials as new rewriting rules.

@@ -96,7 +96,8 @@ class Polynomial:
 
     def _linearReduceWithRespectTo(self, q: Polynomial) -> Polynomial:
         """If LM(q) appears in the polynomial p with coefficient c, return
-        p - c / LC(q) q."""
+        p - c / LC(q) * q. If not, return p."""
+
         lm, lc = q.LT()
         xs = [(m, c) for m, c in self.polynomial if m == lm]
 
@@ -111,6 +112,7 @@ class Polynomial:
         """Check that a polynomial is linearly reduced with respect to a list of
         polynomials. This means that no paths in the support of self is equal to
         the leading term of any of the q in ps."""
+
         support = self.support
 
         for q in ps:
@@ -161,9 +163,11 @@ def _preProcess(
                 current_path = new_path
         if current_coefficient != current_coefficient._getFieldZero():
             heapq.heappush(ys, (current_path, current_coefficient))
+
     # Result:
     #   1. If (path, coeff) appears in ys, then coeff is non-zero.
     #   2. If (path, coeff) appears in ys, this is the unique tuple
     #      in ys with first entry equal to path.
     #   3. Heap invariant preserved.
+
     return ys

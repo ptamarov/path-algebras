@@ -23,6 +23,11 @@ def isLinearlySelfReduced(listPolynomials: list[Polynomial]) -> bool:
 
 
 def linearSelfReduce(ps: list[Polynomial]) -> list[Polynomial]:
+    """Compute the linear self reduction of a list of polynomials. This
+    is equivalent to computing the row reduced echelon form of the matrix
+    corresponding to these polynomials with respect to the ordered basis of
+    paths given by the chosen monomial order.
+    """
     processed: list[Polynomial] = []
 
     if len(ps) == 1:
